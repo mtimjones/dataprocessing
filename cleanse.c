@@ -1,9 +1,11 @@
 // cleanse.c -- Data cleansing tool.
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
+#include <time.h>
 #include <linux/limits.h>
 #include "symtypes.h"
 
@@ -12,7 +14,10 @@ char outputFilename[ NAME_MAX ] = {0};
 char testDataFilename[ NAME_MAX ] = {0};
 char errorFilename[ NAME_MAX] = {0};
 char schema[ NAME_MAX ] = {0};
-double splitOption = 0.0;
+double splitOption = 1.0;
+
+#define getSRand()      ( ( float ) rand( ) / ( float ) RAND_MAX )
+#define prob( x )       ( getSRand( ) > x )
 
 void usage( char* progname )
 {
@@ -25,7 +30,9 @@ int main( int argc, char *argv[] )
 {
    int opt;
    working_t working;
-   FILE *fin, *fout, *ferr;
+   FILE *fin, *fout, *ferr, *ftst;
+
+   srand( time( NULL ) );
 
    if ( argc == 1 )
    {
@@ -93,6 +100,19 @@ int main( int argc, char *argv[] )
       return -1;
    }
 
+   if ( splitOption != 1.0 )
+   {
+      ftst = fopen( testDataFilename, "w" );
+      if ( ftst == ( FILE * )0 )
+      {
+         fprintf( stderr, "Could not open test data file %s.\n", testDataFilename );
+         fclose( fin );
+         fclose( fout );
+         fclose( ferr );
+         return -1;
+      }
+   }
+
    while ( !feof( fin ) )
    {
       memset( &working, 0, sizeof( working ) );
@@ -110,7 +130,14 @@ int main( int argc, char *argv[] )
       }
       else
       {
-         fprintf( fout, "%s", working.line );
+         if ( prob( splitOption ) )
+         {
+            fprintf( ftst, "%s", working.line );
+         }
+         else
+         {
+            fprintf( fout, "%s", working.line );
+         }
       }
    }
 

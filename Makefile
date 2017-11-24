@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -I. -std=c99 -Wall
+CFLAGS = -I. -g -std=c99 -Wall
 
 all: cleanse
 
