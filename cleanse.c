@@ -40,7 +40,7 @@ int main( int argc, char *argv[] )
       return -1;
    }
 
-   while ( ( opt = getopt( argc, argv, "i:o:s:c:y" ) ) != -1 )
+   while ( ( opt = getopt( argc, argv, "i:o:s:c:p" ) ) != -1 )
    {
       switch( opt )
       {
@@ -68,7 +68,7 @@ int main( int argc, char *argv[] )
             strcpy( schema, optarg );
             break;
 
-         case 'y': // Summary option
+         case 'p': // Profile option
             emitSummary = 1;
             break;
 

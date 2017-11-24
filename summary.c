@@ -133,13 +133,19 @@ void Summarize( void )
       }
       else if ( Elements[ i ][ VTYP ].type == STRING )
       {
+         int j;
          printf("Field %d: (STRING)\n", i );
-         for ( int j = 0 ; j < NUM_HISTORY ; j++ )
+         for ( j = 0 ; j < NUM_HISTORY ; j++ )
          {
             if ( Elements[ i ][ j ].type == STRING )
             {
                printf( "     %s\n", Elements[ i ][ j ].u.s );
             }
+            else break;
+         }
+         if ( j == NUM_HISTORY ) 
+         {
+            printf( "     ...\n" );
          }
          printf("\n");
       }
