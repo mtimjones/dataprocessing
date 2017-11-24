@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <linux/limits.h>
 #include "symtypes.h"
 
 unsigned int parseLine( working_t *working, char *schematype )
@@ -17,7 +16,8 @@ unsigned int parseLine( working_t *working, char *schematype )
 
       // Grab the next token
       tokpos = 0;
-      while ( working->line[linepos] != 0 && working->line[linepos] != ',' )
+      while ( working->line[linepos] != 0 && working->line[linepos] != ',' &&
+              working->line[linepos] != 10 && working->line[linepos] != 13 )
       {
          token[tokpos++] = working->line[linepos++];
       }

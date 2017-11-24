@@ -1,5 +1,6 @@
 // symtypes.h
 #include <linux/limits.h>
+#include <values.h>
 
 #define INT       1
 #define DOUBLE    2
