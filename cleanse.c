@@ -105,6 +105,7 @@ int main( int argc, char *argv[] )
 
       if ( working.error )
       {
+         fprintf( ferr, "# Error in field %d\n", working.errorField );
          fprintf( ferr, "%s", working.line );
       }
       else
