@@ -6,7 +6,6 @@
 #include <getopt.h>
 #include <string.h>
 #include <time.h>
-#include <linux/limits.h>
 #include "symtypes.h"
 
 char inputFilename[ NAME_MAX ] = {0};
@@ -31,6 +30,7 @@ int main( int argc, char *argv[] )
    int opt;
    working_t working;
    FILE *fin, *fout, *ferr, *ftst;
+   int emitSummary = 0;
 
    srand( time( NULL ) );
 
@@ -40,7 +40,7 @@ int main( int argc, char *argv[] )
       return -1;
    }
 
-   while ( ( opt = getopt( argc, argv, "i:o:s:c:" ) ) != -1 )
+   while ( ( opt = getopt( argc, argv, "i:o:s:c:y" ) ) != -1 )
    {
       switch( opt )
       {
@@ -66,6 +66,10 @@ int main( int argc, char *argv[] )
 
          case 'c': // Schema definition
             strcpy( schema, optarg );
+            break;
+
+         case 'y': // Summary option
+            emitSummary = 1;
             break;
 
          default:
@@ -113,6 +117,8 @@ int main( int argc, char *argv[] )
       }
    }
 
+   InitializeSummary( );
+
    while ( !feof( fin ) )
    {
       memset( &working, 0, sizeof( working ) );
@@ -141,7 +147,10 @@ int main( int argc, char *argv[] )
       }
    }
 
-   // emit line
+   if ( emitSummary )
+   {
+      Summarize( );
+   }
 
    // Close file pointers
    fclose( fin );

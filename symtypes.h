@@ -1,5 +1,5 @@
 // symtypes.h
-
+#include <linux/limits.h>
 
 #define INT       1
 #define DOUBLE    2
@@ -34,4 +34,6 @@ typedef struct working_s
 } working_t;
 
 extern unsigned int parseLine( working_t *, char * );
-
+extern void InitializeSummary( void );
+extern void AddElementToSummary( unsigned int element, element_t *elemobj );
+extern void Summarize( void );

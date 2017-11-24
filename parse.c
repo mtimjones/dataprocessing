@@ -60,6 +60,10 @@ unsigned int parseLine( working_t *working, char *schematype )
             break;
       }
 
+      if ( !working->error )
+      {
+         AddElementToSummary( element, &working->parsedLine[ element ] );
+      }
 
       if ( working->line[linepos-1] == 0 ) break;
       else linepos++;
