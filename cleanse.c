@@ -21,7 +21,7 @@ double splitOption = 1.0;
 void usage( char* progname )
 {
    fprintf( stderr, "Usage: %s -i inputfile -o outputfile -c schema"
-                    " [-s splitprob]\n", progname );
+                    " [-s splitprob] [-p]\n", progname );
    return;
 }
 
