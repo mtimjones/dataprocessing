@@ -14,9 +14,6 @@ char testDataFilename[ NAME_MAX ] = {0};
 char validationFilename[ NAME_MAX ] = {0};
 char outputFilename[ NAME_MAX ] = {0};
 
-#define getSRand()      ( ( float ) rand( ) / ( float ) RAND_MAX )
-#define prob( x )       ( getSRand( ) > x )
-
 int get_observation( FILE *fptr, observation *obs )
 {
    int  legs;
@@ -148,6 +145,7 @@ int main( int argc, char *argv[] )
 
    if ( vq )
    {
+//   vq_initialize( );
 //   vq_train( ftest );
 
 //   vq_validate( ftest, fout );

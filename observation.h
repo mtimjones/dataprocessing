@@ -1,6 +1,12 @@
-// vq.h
+// observation.h
+
+#define getSRand()      ( ( float ) rand( ) / ( float ) RAND_MAX )
+#define getRand( x )    ( int ) ( ( x ) * getSRand( ) )
+#define prob( x )       ( getSRand( ) > x )
 
 #define MAX_NAME      40
+
+#define MAX_FEATURES  21
 
 typedef struct observation
 {
@@ -32,6 +38,4 @@ typedef struct observation
    int  class;
 
 } observation;
-
-
 

@@ -1,13 +1,13 @@
 CC = gcc
 CFLAGS = -I. -g -std=c99 -Wall
 
-all: cleanse vq
+all: cleanse learn
 
 cleanse: cleanse.c parse.c summary.c
 	$(CC) -o $@ $^ $(CFLAGS)
 
-vq: vq.c
+learn: learn.c vq.c
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -f cleanse vq
+	rm -f cleanse learn
