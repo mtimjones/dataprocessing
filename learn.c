@@ -8,18 +8,33 @@
 #include <strings.h>
 #include <time.h>
 #include "symtypes.h"
-#include "observation.h"
+#include "learn.h"
 
 char testDataFilename[ NAME_MAX ] = {0};
 char validationFilename[ NAME_MAX ] = {0};
 char outputFilename[ NAME_MAX ] = {0};
 
+static int changed = 0;
+
+void set_changed( int value )
+{
+   changed = value;
+}
+
+int  is_changed_set( void )
+{
+   return changed;
+}
+
+void reset_file( FILE *fptr )
+{
+   fseek( fptr, 0L, SEEK_SET );
+}
+
 int get_observation( FILE *fptr, observation *obs )
 {
    int  legs;
    int  ret = 0;
-
-   (void)obs;
 
    bzero( obs, sizeof( observation ) );
 
@@ -57,6 +72,7 @@ int get_observation( FILE *fptr, observation *obs )
          ret = 1;
       }
       else ret = 0;
+
    }
 
    return ret;

@@ -1,4 +1,4 @@
-// observation.h
+// learn.h
 
 #define getSRand()      ( ( float ) rand( ) / ( float ) RAND_MAX )
 #define getRand( x )    ( int ) ( ( x ) * getSRand( ) )
@@ -38,4 +38,8 @@ typedef struct observation
    int  class;
 
 } observation;
+
+void set_changed( int );
+int is_changed_set( void );
+int get_observation( FILE*, observation* );
 
