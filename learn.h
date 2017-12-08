@@ -37,6 +37,8 @@ typedef struct observation
    
    int  class;
 
+   int  computed_class;
+
 } observation;
 
 void set_changed( int );

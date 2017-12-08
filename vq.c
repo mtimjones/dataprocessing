@@ -16,19 +16,11 @@ typedef struct feature
 
 static double  outputs[ OUTPUTS ];
 static double  weights[ OUTPUTS ][ MAX_FEATURES ];
-static feature feature_vectors[ MAX_FEAT_VECS ];
+static int     input_feature_vector[ MAX_FEATURES ];
 
 void vq_initialize( int num_features )
 {
-   int vector, output, feature;
-
-   for ( vector = 0 ; vector < MAX_FEAT_VECS ; vector++ )
-   {
-      for ( feature = 0 ; feature < MAX_FEATURES ; feature++ )
-      {
-         feature_vectors[ vector ].features[ feature ] = getRand( MAX_FEATURES );
-      }
-   }
+   int output, feature;
 
    // Initialize weights
    for ( output = 0 ; output < OUTPUTS ; output++ )
@@ -41,28 +33,69 @@ void vq_initialize( int num_features )
       }
    }
 
-
    return;
 }
 
 
-int vq_feedforward( observation *obs )
+int vq_feedforward( void )
 {
 
    return 0;
 }
 
 
-void vq_updateweights( observation *obs, int clas )
+void vq_updateweights( observation *obs, int class )
 {
+   for ( int weight = 0 ; weight < MAX_FEATURES ; weight++ )
+   {
+//      weights[ class ][ weight ] += RATE *
+
+   }
+
+   obs->computed_class = class;
+
    return;
 }
 
+void vq_set_input_vector( observation *obs )
+{
+   input_feature_vector[ 0 ] = obs->hair;
+   input_feature_vector[ 1 ] = obs->feathers;
+   input_feature_vector[ 2 ] = obs->eggs;
+   input_feature_vector[ 3 ] = obs->milk;
+   input_feature_vector[ 4 ] = obs->airborne;
+   input_feature_vector[ 5 ] = obs->aquatic;
+   input_feature_vector[ 6 ] = obs->predator;
+   input_feature_vector[ 7 ] = obs->toothed;
+   input_feature_vector[ 8 ] = obs->backbone;
+   input_feature_vector[ 9 ] = obs->breathes;
+   input_feature_vector[ 10 ] = obs->venomous;
+   input_feature_vector[ 11 ] = obs->fins;
+   input_feature_vector[ 12 ] = obs->legs_0;
+   input_feature_vector[ 13 ] = obs->legs_2;
+   input_feature_vector[ 14 ] = obs->legs_4;
+   input_feature_vector[ 15 ] = obs->legs_5;
+   input_feature_vector[ 16 ] = obs->legs_6;
+   input_feature_vector[ 17 ] = obs->legs_8;
+   input_feature_vector[ 18 ] = obs->tail;
+   input_feature_vector[ 19 ] = obs->domestic;
+   input_feature_vector[ 20 ] = obs->catsize;
+
+   return;
+}
 
 void vq_train( FILE *fptr )
 {
    int result;
    observation obs;
+
+   // Initialize the first N observations to the N classes.
+   for ( int class = 0 ; class < OUTPUTS ; class++ )
+   {
+      vq_set_input_vector( &obs );
+      result = get_observation( fptr, &obs );
+      vq_updateweights( &obs, class );
+   }
 
    set_changed( 1 );
 
@@ -79,10 +112,14 @@ void vq_train( FILE *fptr )
             // We've gone through all samples with no cluster changes.
             return;
          }
+
+         // Reset the file position to the beginning.
+         fseek( fptr, 0L, SEEK_SET );
       }
       else
       {
-         int class = vq_feedforward( &obs );
+         vq_set_input_vector( &obs );
+         int class = vq_feedforward( );
          vq_updateweights( &obs, class );
       }
 
