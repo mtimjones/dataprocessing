@@ -10,7 +10,7 @@
 #define MAX_FEAT_VECS    200
 
 #define BETA             ( double )4.0
-#define RHO              ( double )0.3
+#define RHO              ( double )0.35
 
 typedef struct vector
 {
