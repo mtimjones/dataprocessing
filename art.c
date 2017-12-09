@@ -5,9 +5,12 @@
 #include <string.h>
 #include "learn.h"
 
-#define CLUSTERS              9
+#define CLUSTERS           9
 
 #define MAX_FEAT_VECS    200
+
+#define BETA             ( double )4.0
+#define RHO              ( double )0.3
 
 typedef struct vector
 {
@@ -29,6 +32,7 @@ vector clusters[ CLUSTERS ];
 void art_translate_observation( int index, observation *obs )
 {
    strcpy( feature_vectors[ index ].name, obs->name );
+
    feature_vectors[ index ].features[ 0] = obs->hair;
    feature_vectors[ index ].features[ 1] = obs->feathers;
    feature_vectors[ index ].features[ 2] = obs->eggs;
@@ -50,10 +54,11 @@ void art_translate_observation( int index, observation *obs )
    feature_vectors[ index ].features[18] = obs->tail;
    feature_vectors[ index ].features[19] = obs->domestic;
    feature_vectors[ index ].features[20] = obs->catsize;
+
    feature_vectors[ index ].actual_class = obs->class;
 
    // Indicate that this feature has not been clustered.
-   feature_vectors[ index ].cluster = -1;
+   feature_vectors[ index ].cluster = CLUSTERS;
 
    return;
 }
@@ -73,8 +78,8 @@ int vMagnitude( vector *x )
 void vAnd( vector *result, vector *x, vector *y )
 {
   // Boolean AND operation on two vectors.
-  for (int i = 0 ; i < MAX_FEATURES ; i++) {
-    result->features[i] = x->features[i] & y->features[i];
+  for (int feature = 0 ; feature < MAX_FEATURES ; feature++) {
+    result->features[ feature ] = x->features[ feature ] & y->features[ feature ];
   }
 
   return;
@@ -84,7 +89,7 @@ void recalculate_cluster( int cluster )
 {
    int first = 0;
 
-   for ( int vec = 0 ; vec < MAX_FEAT_VECS ; vec++ )
+   for ( int vec = 0 ; vec < max_feature_vectors ; vec++ )
    {
       if ( feature_vectors[ vec ].cluster == cluster )
       {
@@ -127,18 +132,19 @@ int find_empty_cluster( void )
    return CLUSTERS;
 }
 
-void cluster_create( int vector )
+void cluster_create( int feature )
 {
-   feature_vectors[ vector ].cluster = find_empty_cluster( );
+   feature_vectors[ feature ].cluster = find_empty_cluster( );
 
-   if ( feature_vectors[ vector ].cluster != CLUSTERS )
+   if ( feature_vectors[ feature ].cluster != CLUSTERS )
    {
-      for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
+      for ( int i = 0 ; i < MAX_FEATURES ; i++ )
       {
-         clusters[ feature_vectors[ vector ].cluster ].features[ feature ] = 
-            feature_vectors[ vector ].features[ feature ];
+         clusters[ feature_vectors[ feature ].cluster ].features[ i ] = 
+            feature_vectors[ feature ].features[ i ];
       }
-      clusters[ feature_vectors[ vector ].cluster ].cluster = 1;
+      clusters[ feature_vectors[ feature ].cluster ].count = 1;
+printf("Feature %d added to new cluster %d\n", feature, feature_vectors[feature].cluster );
    }
 
    return;
@@ -146,7 +152,6 @@ void cluster_create( int vector )
 
 void cluster_add( int cluster, int vector )
 {
-
    // If the current feature vector has been classified, pull it out.
    if ( feature_vectors[ vector ].cluster != CLUSTERS )
    {
@@ -160,6 +165,27 @@ void cluster_add( int cluster, int vector )
    feature_vectors[ vector ].cluster = cluster;
    clusters[ cluster ].count++;
    recalculate_cluster( cluster );
+
+   return;
+}
+
+void cluster_debug( void )
+{
+   for ( int cluster = 0 ; cluster < CLUSTERS ; cluster++ )
+   {
+      printf("Cluster %d\n", cluster );
+
+      for ( int feature = 0 ; feature < max_feature_vectors ; feature++ )
+      {
+         if ( feature_vectors[ feature ].cluster == cluster )
+         {
+            printf( "%s (%d)\n", 
+                     feature_vectors[ feature ].name,
+                     feature_vectors[ feature ].actual_class );
+         }
+      }
+      printf("\n");
+   }
 
    return;
 }
@@ -180,9 +206,165 @@ void art_initialize( FILE *fptr )
       max_feature_vectors++;
    }
 
-   printf( "max feat vecs = %d\n", max_feature_vectors );
+   return;
+}
+
+#if 0
+int cluster_observation( int feature )
+{
+   vector result;
+   int cluster;
+
+   for ( cluster = 0 ; cluster < CLUSTERS ; cluster++ )
+   {
+      // If a cluster has no members, skip it.
+      if ( clusters[ cluster ].count == 0 ) continue;
+
+      // result = feature vector vAnd cluster vector
+      vAnd( &result, &feature_vectors[ feature ], &clusters[ cluster ] );
+
+      // Compute the magnitudes (1 counts ).
+      double resultMag = ( double )vMagnitude( &result );
+      double featureMag = ( double )vMagnitude( &feature_vectors[ feature ] );
+      double clusterMag = ( double )vMagnitude( &clusters[ cluster ] );
+
+      double maximum    = resultMag / ( BETA + clusterMag );
+      double similarity = featureMag / ( BETA + ( double ) MAX_FEATURES );
+
+//printf("ART: %g %g %g %g %g\n", resultMag, featureMag, clusterMag, maximum, similarity);
+
+      // See if the feature vector is similar to the cluster
+      if ( maximum > similarity )
+      {
+         if ( ( resultMag / clusterMag ) >= RHO )
+         {
+            return cluster;
+         }
+      }
+   }
+
+   return cluster;
+}
+#else
+int cluster_observation( int feature )
+{
+   vector result;
+   int cluster;
+   double best_max = 0.0;
+   int best_cluster = CLUSTERS;
+
+   double featureMag = ( double )vMagnitude( &feature_vectors[ feature ] );
+
+   for ( cluster = 0 ; cluster < CLUSTERS ; cluster++ )
+   {
+      // If a cluster has no members, skip it.
+      if ( clusters[ cluster ].count == 0 ) continue;
+
+      // result = feature vector vAnd cluster vector
+      vAnd( &result, &feature_vectors[ feature ], &clusters[ cluster ] );
+      double resultMag = ( double )vMagnitude( &result );
+
+      double clusterMag = ( double )vMagnitude( &clusters[ cluster ] );
+
+      double maximum = resultMag / ( BETA + clusterMag );
+
+      if ( maximum > best_max )
+      {
+         best_max = maximum;
+         best_cluster = cluster;
+      }
+
+   }
+
+   if ( best_cluster != CLUSTERS )
+   {
+      vAnd( &result, &feature_vectors[ feature ], &clusters[ best_cluster ] );
+
+      // Compute the magnitudes (1 counts ).
+      double resultMag = ( double )vMagnitude( &result );
+      double clusterMag = ( double )vMagnitude( &clusters[ best_cluster ] );
+
+      double maximum    = resultMag / ( BETA + clusterMag );
+      double similarity = featureMag / ( BETA + ( double ) MAX_FEATURES );
+
+printf("ART: %g %g %g %g %g\n", resultMag, featureMag, clusterMag, maximum, similarity);
+
+      // See if the feature vector is similar to the cluster
+      if ( maximum > similarity )
+      {
+         if ( ( resultMag / clusterMag ) >= RHO )
+         {
+            return best_cluster;
+         }
+         else
+         {
+            best_cluster = CLUSTERS;
+         }
+      }
+      else
+      {
+         best_cluster = CLUSTERS;
+      }
+   }
+
+   return best_cluster;
+}
+#endif
+
+
+void art_train( void )
+{
+   int changes = 1;
+   int cluster;
+
+   while ( changes )
+   {
+      changes = 0;
+
+      for ( int feature = 0 ; feature < max_feature_vectors ; feature++ )
+      {
+         cluster = cluster_observation( feature );
+
+         if ( cluster == CLUSTERS)
+         {
+            cluster_create( feature );
+            changes++;
+         }
+         else
+         {
+            // If this feature vector has moved, move it.
+            if ( feature_vectors[ feature ].cluster != cluster )
+            {
+               cluster_add( cluster, feature );
+printf("Feature %d moved to cluster %d\n", feature, cluster );
+               changes++;
+            }
+         }
+      }
+      printf("Changes %d\n", changes);
+   }
+
+   for ( int cluster = 0 ; cluster < CLUSTERS ; cluster++ )
+   {
+      printf("Cluster %d: Count %3d : [ ", cluster, clusters[cluster].count);
+      for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
+      {
+         printf("%1d ", clusters[cluster].features[feature]);
+      }
+      printf("]\n");
+   }
+
+   cluster_debug( );
 
    return;
+}
+
+
+void art_validate( FILE *fptr, FILE *fout )
+{
+  // use the get_observation API to grab an observation.
+  // use max_feature_vector+1 to load the obwservation in for validation.
+
 }
 
 

@@ -181,6 +181,13 @@ int main( int argc, char *argv[] )
    {
       // Initialize and ingest the dataset into memory.
       art_initialize( ftest );
+
+      art_train( );
+
+      if ( fvalid != ( FILE * ) 0)
+      {
+         art_validate( fvalid, fout );
+      }
    }
 
    // Close file pointers
