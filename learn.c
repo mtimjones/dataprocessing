@@ -154,12 +154,6 @@ int main( int argc, char *argv[] )
    }
 
    fvalid = fopen( validationFilename, "r" );
-   if ( fvalid == ( FILE * )0 )
-   {
-      fprintf( stderr, "Could not open validation file %s.\n", validationFilename );
-      fclose( ftest );
-      return -1;
-   }
 
    fout = fopen( outputFilename, "w" );
    if ( fout == ( FILE * )0 )
@@ -173,10 +167,15 @@ int main( int argc, char *argv[] )
    if ( vq )
    {
       vq_initialize( );
+
       vq_train( ftest, iterations );
 
       vq_validate( ftest, fout );
-//   vq_validate( fvalid, fout );
+
+      if ( fvalid != ( FILE * ) 0)
+      {
+         vq_validate( fvalid, fout );
+      }
    }
    else if ( art )
    {
@@ -184,7 +183,7 @@ int main( int argc, char *argv[] )
 
    // Close file pointers
    fclose( ftest );
-   fclose( fvalid );
+   if ( fvalid != ( FILE * )0) fclose( fvalid );
    fclose( fout );
 
    return 0;
