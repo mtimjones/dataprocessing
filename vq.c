@@ -1,6 +1,7 @@
 // vq.c
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "learn.h"
 
 typedef struct feature
@@ -12,13 +13,22 @@ typedef struct feature
 #define OUTPUTS           7
 #define MAX_FEAT_VECS   200
 
-#define RATE          0.01
+#define RATE            0.01
+
+#define SQR( x )        ( ( x ) * ( x ) )
 
 static double  outputs[ OUTPUTS ];
 static double  weights[ OUTPUTS ][ MAX_FEATURES ];
 static int     input_feature_vector[ MAX_FEATURES ];
 
-void vq_initialize( int num_features )
+#define NORMALIZE( x )    ( ( ( double )x + 1.0 ) / 2.0 )
+
+double distance( double x, double y )
+{
+   return sqrt( SQR( ( x - y ) ) );
+}
+
+void vq_initialize( void )
 {
    int output, feature;
 
@@ -39,20 +49,47 @@ void vq_initialize( int num_features )
 
 int vq_feedforward( void )
 {
+   int best;
+   double best_value;
 
-   return 0;
+   // Given the current input feature vector, compute each output node.
+   for ( int output = 0 ; output < OUTPUTS ; output++ )
+   {
+      outputs[ output ] = 0.0;
+      for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
+      {
+         outputs[ output ] += 
+            distance( NORMALIZE( weights[ output ][ feature ] ) , input_feature_vector[ feature ] );
+      }
+
+      // Keep track of the best activation
+      if ( output == 0 )
+      {
+         best = 0;
+         best_value = outputs[ output ];
+      }
+      else
+      {
+         if ( outputs[ output ] < best_value )
+         {
+            best = output;
+            best_value = outputs[ output ];
+         }
+      }
+   }
+
+   return best;
 }
 
 
-void vq_updateweights( observation *obs, int class )
+void vq_updateweights( int class )
 {
-   for ( int weight = 0 ; weight < MAX_FEATURES ; weight++ )
+   for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
    {
-//      weights[ class ][ weight ] += RATE *
-
+      weights[ class ][ feature ] += 
+         RATE * ( (double) NORMALIZE( input_feature_vector[ feature ] ) - 
+                           weights[ class ][ feature ] );
    }
-
-   obs->computed_class = class;
 
    return;
 }
@@ -84,45 +121,66 @@ void vq_set_input_vector( observation *obs )
    return;
 }
 
-void vq_train( FILE *fptr )
+void vq_train( FILE *fptr, long iterations )
 {
    int result;
    observation obs;
+   long iteration = 0;
 
    // Initialize the first N observations to the N classes.
    for ( int class = 0 ; class < OUTPUTS ; class++ )
    {
-      vq_set_input_vector( &obs );
       result = get_observation( fptr, &obs );
-      vq_updateweights( &obs, class );
+      vq_set_input_vector( &obs );
+      vq_updateweights( class );
    }
 
-   set_changed( 1 );
-
-   while ( is_changed_set( ) )
+   while ( iteration < iterations )
    {
-      set_changed( 0 );
-
       result = get_observation( fptr, &obs );
 
       if ( !result )
       {
-         if ( !is_changed_set( ) )
-         {
-            // We've gone through all samples with no cluster changes.
-            return;
-         }
-
          // Reset the file position to the beginning.
          fseek( fptr, 0L, SEEK_SET );
+         iteration++;
       }
       else
       {
          vq_set_input_vector( &obs );
          int class = vq_feedforward( );
-         vq_updateweights( &obs, class );
+         vq_updateweights( class );
       }
-
    }
 
+   return;
 }
+
+
+void vq_validate( FILE *fptr, FILE *fout )
+{
+   int result;
+   observation obs;
+
+   // Reset the input file
+   fseek( fptr, 0L, SEEK_SET );
+
+   while ( 1 )
+   {
+      result = get_observation( fptr, &obs );
+
+      if ( !result )
+      {
+         break;
+      }
+      else 
+      {
+         vq_set_input_vector( &obs );
+         int class = vq_feedforward( );
+         fprintf( fout, "%s,%d\n", obs.name, class );
+      }
+   }
+
+   return;
+}
+

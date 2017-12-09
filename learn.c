@@ -90,6 +90,7 @@ int main( int argc, char *argv[] )
    int opt;
    FILE *ftest, *fvalid, *fout;
    int art = 0, vq = 0;
+   long iterations = 1000L;
 
    srand( time( NULL ) );
 
@@ -99,7 +100,7 @@ int main( int argc, char *argv[] )
       return -1;
    }
 
-   while ( ( opt = getopt( argc, argv, "t:v:o:a:" ) ) != -1 )
+   while ( ( opt = getopt( argc, argv, "t:v:o:a:i:" ) ) != -1 )
    {
       switch( opt )
       {
@@ -127,11 +128,21 @@ int main( int argc, char *argv[] )
                break;
             }
 
+         case 'i': // Iterations
+            iterations = atol( optarg );
+            break;
+
          default:
             usage( argv[0] );
             return -1;
             break;
       }
+   }
+
+   if ( vq == 0 && art == 0 )
+   {
+      usage( argv[ 0 ] );
+      return -1;
    }
 
    // Open file pointers
@@ -161,25 +172,14 @@ int main( int argc, char *argv[] )
 
    if ( vq )
    {
-//   vq_initialize( );
-//   vq_train( ftest );
+      vq_initialize( );
+      vq_train( ftest, iterations );
 
-//   vq_validate( ftest, fout );
+      vq_validate( ftest, fout );
 //   vq_validate( fvalid, fout );
    }
    else if ( art )
    {
-   }
-
-   {
-      observation obs;
-
-      while ( get_observation( ftest, &obs ) )
-      {
-         printf( "name %s, class %d\n", obs.name, obs.class );
-         printf( "legs %d %d %d %d %d %d\n", 
-                  obs.legs_0, obs.legs_2, obs.legs_4, obs.legs_5, obs.legs_6, obs.legs_8);
-      }
    }
 
    // Close file pointers

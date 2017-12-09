@@ -45,3 +45,6 @@ void set_changed( int );
 int is_changed_set( void );
 int get_observation( FILE*, observation* );
 
+void vq_initialize( void );
+void vq_train( FILE*, long iterations );
+void vq_validate( FILE*, FILE* );

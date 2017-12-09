@@ -7,7 +7,7 @@ cleanse: cleanse.c parse.c summary.c
 	$(CC) -o $@ $^ $(CFLAGS)
 
 learn: learn.c vq.c
-	$(CC) -o $@ $^ $(CFLAGS)
+	$(CC) -o $@ $^ $(CFLAGS) -lm
 
 clean:
 	rm -f cleanse learn
