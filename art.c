@@ -52,10 +52,117 @@ void art_translate_observation( int index, observation *obs )
    feature_vectors[ index ].features[20] = obs->catsize;
    feature_vectors[ index ].actual_class = obs->class;
 
+   // Indicate that this feature has not been clustered.
+   feature_vectors[ index ].cluster = -1;
+
    return;
 }
 
+int vMagnitude( vector *x )
+{
+  int sum=0;
 
+  // Count the '1's in the feature vector.
+  for (int i = 0 ; i < MAX_FEATURES ; i++) {
+    sum += x->features[ i ];
+  }
+
+  return sum;
+}
+
+void vAnd( vector *result, vector *x, vector *y )
+{
+  // Boolean AND operation on two vectors.
+  for (int i = 0 ; i < MAX_FEATURES ; i++) {
+    result->features[i] = x->features[i] & y->features[i];
+  }
+
+  return;
+}
+
+void recalculate_cluster( int cluster )
+{
+   int first = 0;
+
+   for ( int vec = 0 ; vec < MAX_FEAT_VECS ; vec++ )
+   {
+      if ( feature_vectors[ vec ].cluster == cluster )
+      {
+         if ( !first )
+         {
+            first = 1;
+
+            // Set the cluster to the first feature vector for this cluster.
+            for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
+            {
+               clusters[ cluster ].features[ feature ] =
+                  feature_vectors[ vec ].features[ feature ];
+            }
+         }
+         else
+         {
+            // Boolean AND the next feature vectors into the cluster.
+            for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
+            {
+               clusters[ cluster ].features[ feature ] &=
+                  feature_vectors[ vec ].features[ feature ];
+            }
+         }
+      }
+   }
+
+   return;
+}
+
+int find_empty_cluster( void )
+{
+   for ( int cluster = 0 ; cluster < CLUSTERS ; cluster++ )
+   {
+      if ( clusters[ cluster ].count == 0 )
+      {
+         return cluster;
+      }
+   }
+
+   return CLUSTERS;
+}
+
+void cluster_create( int vector )
+{
+   feature_vectors[ vector ].cluster = find_empty_cluster( );
+
+   if ( feature_vectors[ vector ].cluster != CLUSTERS )
+   {
+      for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
+      {
+         clusters[ feature_vectors[ vector ].cluster ].features[ feature ] = 
+            feature_vectors[ vector ].features[ feature ];
+      }
+      clusters[ feature_vectors[ vector ].cluster ].cluster = 1;
+   }
+
+   return;
+}
+
+void cluster_add( int cluster, int vector )
+{
+
+   // If the current feature vector has been classified, pull it out.
+   if ( feature_vectors[ vector ].cluster != CLUSTERS )
+   {
+      int prior_cluster = feature_vectors[ vector ].cluster;
+      feature_vectors[ vector ].cluster = CLUSTERS;
+      clusters[ prior_cluster ].count--;
+      recalculate_cluster( prior_cluster );
+   }
+
+   // Add the feature vector to the new cluster.
+   feature_vectors[ vector ].cluster = cluster;
+   clusters[ cluster ].count++;
+   recalculate_cluster( cluster );
+
+   return;
+}
 
 void art_initialize( FILE *fptr )
 {
@@ -77,3 +184,5 @@ void art_initialize( FILE *fptr )
 
    return;
 }
+
+
