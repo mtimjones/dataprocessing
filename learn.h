@@ -48,3 +48,5 @@ int get_observation( FILE*, observation* );
 void vq_initialize( void );
 void vq_train( FILE*, long iterations );
 void vq_validate( FILE*, FILE* );
+
+void art_initialize( FILE* );

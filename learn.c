@@ -179,6 +179,8 @@ int main( int argc, char *argv[] )
    }
    else if ( art )
    {
+      // Initialize and ingest the dataset into memory.
+      art_initialize( ftest );
    }
 
    // Close file pointers
