@@ -182,7 +182,7 @@ int main( int argc, char *argv[] )
       // Initialize and ingest the dataset into memory.
       art_initialize( ftest );
 
-      art_train( );
+      art_train( fout );
 
       if ( fvalid != ( FILE * ) 0)
       {

@@ -9,8 +9,10 @@
 
 #define MAX_FEAT_VECS    200
 
-#define BETA             ( double )4.0
-#define RHO              ( double )0.35
+//#define BETA             ( double )5.0
+//#define RHO              ( double )0.4
+#define BETA             ( double )6.0
+#define RHO              ( double )0.45
 
 typedef struct vector
 {
@@ -144,7 +146,6 @@ void cluster_create( int feature )
             feature_vectors[ feature ].features[ i ];
       }
       clusters[ feature_vectors[ feature ].cluster ].count = 1;
-printf("Feature %d added to new cluster %d\n", feature, feature_vectors[feature].cluster );
    }
 
    return;
@@ -169,22 +170,21 @@ void cluster_add( int cluster, int vector )
    return;
 }
 
-void cluster_debug( void )
+void cluster_debug( FILE *fptr )
 {
    for ( int cluster = 0 ; cluster < CLUSTERS ; cluster++ )
    {
-      printf("Cluster %d\n", cluster );
-
       for ( int feature = 0 ; feature < max_feature_vectors ; feature++ )
       {
          if ( feature_vectors[ feature ].cluster == cluster )
          {
-            printf( "%s (%d)\n", 
-                     feature_vectors[ feature ].name,
-                     feature_vectors[ feature ].actual_class );
+            fprintf( fptr, "%s,%d,%d\n", 
+                        feature_vectors[ feature ].name,
+                        cluster,
+                        feature_vectors[ feature ].actual_class );
          }
       }
-      printf("\n");
+      fprintf( fptr, "\n" );
    }
 
    return;
@@ -209,43 +209,7 @@ void art_initialize( FILE *fptr )
    return;
 }
 
-#if 0
-int cluster_observation( int feature )
-{
-   vector result;
-   int cluster;
 
-   for ( cluster = 0 ; cluster < CLUSTERS ; cluster++ )
-   {
-      // If a cluster has no members, skip it.
-      if ( clusters[ cluster ].count == 0 ) continue;
-
-      // result = feature vector vAnd cluster vector
-      vAnd( &result, &feature_vectors[ feature ], &clusters[ cluster ] );
-
-      // Compute the magnitudes (1 counts ).
-      double resultMag = ( double )vMagnitude( &result );
-      double featureMag = ( double )vMagnitude( &feature_vectors[ feature ] );
-      double clusterMag = ( double )vMagnitude( &clusters[ cluster ] );
-
-      double maximum    = resultMag / ( BETA + clusterMag );
-      double similarity = featureMag / ( BETA + ( double ) MAX_FEATURES );
-
-//printf("ART: %g %g %g %g %g\n", resultMag, featureMag, clusterMag, maximum, similarity);
-
-      // See if the feature vector is similar to the cluster
-      if ( maximum > similarity )
-      {
-         if ( ( resultMag / clusterMag ) >= RHO )
-         {
-            return cluster;
-         }
-      }
-   }
-
-   return cluster;
-}
-#else
 int cluster_observation( int feature )
 {
    vector result;
@@ -287,8 +251,6 @@ int cluster_observation( int feature )
       double maximum    = resultMag / ( BETA + clusterMag );
       double similarity = featureMag / ( BETA + ( double ) MAX_FEATURES );
 
-printf("ART: %g %g %g %g %g\n", resultMag, featureMag, clusterMag, maximum, similarity);
-
       // See if the feature vector is similar to the cluster
       if ( maximum > similarity )
       {
@@ -309,10 +271,9 @@ printf("ART: %g %g %g %g %g\n", resultMag, featureMag, clusterMag, maximum, simi
 
    return best_cluster;
 }
-#endif
 
 
-void art_train( void )
+void art_train( FILE *fptr )
 {
    int changes = 1;
    int cluster;
@@ -336,7 +297,6 @@ void art_train( void )
             if ( feature_vectors[ feature ].cluster != cluster )
             {
                cluster_add( cluster, feature );
-printf("Feature %d moved to cluster %d\n", feature, cluster );
                changes++;
             }
          }
@@ -354,7 +314,7 @@ printf("Feature %d moved to cluster %d\n", feature, cluster );
       printf("]\n");
    }
 
-   cluster_debug( );
+   cluster_debug( fptr );
 
    return;
 }
@@ -362,9 +322,23 @@ printf("Feature %d moved to cluster %d\n", feature, cluster );
 
 void art_validate( FILE *fptr, FILE *fout )
 {
-  // use the get_observation API to grab an observation.
-  // use max_feature_vector+1 to load the obwservation in for validation.
+   observation obs;
+   int cluster;
 
+   // Rewind the validation file
+   fseek( fptr, 0L, SEEK_SET );
+
+   fprintf( fout, "Validation:\n" );
+
+   // Grab an observation from the validation file and find it's cluster
+   while ( get_observation( fptr, &obs ) )
+   {
+      art_translate_observation( max_feature_vectors, &obs );
+      cluster = cluster_observation( max_feature_vectors );
+      fprintf(fout, "%s -> Cluster %d\n", feature_vectors[ max_feature_vectors ].name, cluster );
+   }
+
+   return;
 }
 
 

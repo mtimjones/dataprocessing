@@ -50,6 +50,6 @@ void vq_train( FILE*, long iterations );
 void vq_validate( FILE*, FILE* );
 
 void art_initialize( FILE* );
-void art_train( void );
+void art_train( FILE* );
 void art_validate( FILE*, FILE* );
 
