@@ -4,14 +4,7 @@
 #include <math.h>
 #include "learn.h"
 
-typedef struct feature
-{
-   int features[ MAX_FEATURES ];
-   int class;
-} feature;
-
 #define OUTPUTS           7
-#define MAX_FEAT_VECS   200
 
 #define RATE            0.01
 
