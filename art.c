@@ -9,8 +9,6 @@
 
 #define MAX_FEAT_VECS    200
 
-//#define BETA             ( double )5.0
-//#define RHO              ( double )0.4
 #define BETA             ( double )6.0
 #define RHO              ( double )0.45
 
