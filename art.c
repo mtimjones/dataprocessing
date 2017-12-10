@@ -242,7 +242,7 @@ int cluster_observation( int feature )
    {
       vAnd( &result, &feature_vectors[ feature ], &clusters[ best_cluster ] );
 
-      // Compute the magnitudes (1 counts ).
+      // Compute the magnitudes (1 counts).
       double resultMag = ( double )vMagnitude( &result );
       double clusterMag = ( double )vMagnitude( &clusters[ best_cluster ] );
 
@@ -270,6 +270,20 @@ int cluster_observation( int feature )
    return best_cluster;
 }
 
+void emit_clusters( FILE *fptr )
+{
+   for ( int cluster = 0 ; cluster < CLUSTERS ; cluster++ )
+   {
+      printf("Cluster %d: Count %3d : [ ", cluster, clusters[cluster].count);
+      for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
+      {
+         printf("%1d ", clusters[cluster].features[feature]);
+      }
+      printf("]\n");
+   }
+
+   cluster_debug( fptr );
+}
 
 void art_train( FILE *fptr )
 {
@@ -284,7 +298,7 @@ void art_train( FILE *fptr )
       {
          cluster = cluster_observation( feature );
 
-         if ( cluster == CLUSTERS)
+         if ( cluster == CLUSTERS )
          {
             cluster_create( feature );
             changes++;
@@ -299,20 +313,9 @@ void art_train( FILE *fptr )
             }
          }
       }
-      printf("Changes %d\n", changes);
    }
 
-   for ( int cluster = 0 ; cluster < CLUSTERS ; cluster++ )
-   {
-      printf("Cluster %d: Count %3d : [ ", cluster, clusters[cluster].count);
-      for ( int feature = 0 ; feature < MAX_FEATURES ; feature++ )
-      {
-         printf("%1d ", clusters[cluster].features[feature]);
-      }
-      printf("]\n");
-   }
-
-   cluster_debug( fptr );
+   emit_clusters( fptr );
 
    return;
 }
@@ -333,7 +336,8 @@ void art_validate( FILE *fptr, FILE *fout )
    {
       art_translate_observation( max_feature_vectors, &obs );
       cluster = cluster_observation( max_feature_vectors );
-      fprintf(fout, "%s -> Cluster %d\n", feature_vectors[ max_feature_vectors ].name, cluster );
+      fprintf( fout, "%s -> Cluster %d\n", 
+                  feature_vectors[ max_feature_vectors ].name, cluster );
    }
 
    return;
