@@ -134,16 +134,16 @@ int find_empty_cluster( void )
 
 void cluster_create( int feature )
 {
-   feature_vectors[ feature ].cluster = find_empty_cluster( );
+   int cluster = find_empty_cluster( );
 
-   if ( feature_vectors[ feature ].cluster != CLUSTERS )
+   if ( cluster != CLUSTERS )
    {
       for ( int i = 0 ; i < MAX_FEATURES ; i++ )
       {
-         clusters[ feature_vectors[ feature ].cluster ].features[ i ] = 
-            feature_vectors[ feature ].features[ i ];
+         clusters[ cluster ].features[ i ] = feature_vectors[ feature ].features[ i ];
       }
-      clusters[ feature_vectors[ feature ].cluster ].count = 1;
+      clusters[ cluster ].count = 1;
+      feature_vectors[ feature ].cluster = cluster;
    }
 
    return;
@@ -190,7 +190,6 @@ void cluster_debug( FILE *fptr )
 
 void art_initialize( FILE *fptr )
 {
-   int result;
    observation obs;
 
    memset( ( void * )feature_vectors, 0, sizeof( feature_vectors ) );
@@ -198,7 +197,7 @@ void art_initialize( FILE *fptr )
    memset( ( void * )clusters, 0, sizeof( clusters ) );
 
    // Ingest the feature vectors
-   while ( ( result = get_observation( fptr, &obs ) ) )
+   while ( get_observation( fptr, &obs ) )
    {
       art_translate_observation( max_feature_vectors, &obs );
       max_feature_vectors++;
@@ -211,13 +210,12 @@ void art_initialize( FILE *fptr )
 int cluster_observation( int feature )
 {
    vector result;
-   int cluster;
    double best_max = 0.0;
    int best_cluster = CLUSTERS;
 
    double featureMag = ( double )vMagnitude( &feature_vectors[ feature ] );
 
-   for ( cluster = 0 ; cluster < CLUSTERS ; cluster++ )
+   for ( int cluster = 0 ; cluster < CLUSTERS ; cluster++ )
    {
       // If a cluster has no members, skip it.
       if ( clusters[ cluster ].count == 0 ) continue;
@@ -256,18 +254,10 @@ int cluster_observation( int feature )
          {
             return best_cluster;
          }
-         else
-         {
-            best_cluster = CLUSTERS;
-         }
-      }
-      else
-      {
-         best_cluster = CLUSTERS;
       }
    }
 
-   return best_cluster;
+   return CLUSTERS;
 }
 
 void emit_clusters( FILE *fptr )
