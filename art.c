@@ -9,8 +9,8 @@
 
 #define MAX_FEAT_VECS    200
 
-#define BETA             ( double )6.0
-#define RHO              ( double )0.45
+#define BETA             ( double )7.0
+#define RHO              ( double )0.55
 
 typedef struct vector
 {
@@ -326,8 +326,9 @@ void art_validate( FILE *fptr, FILE *fout )
    {
       art_translate_observation( max_feature_vectors, &obs );
       cluster = cluster_observation( max_feature_vectors );
-      fprintf( fout, "%s -> Cluster %d\n", 
-                  feature_vectors[ max_feature_vectors ].name, cluster );
+      fprintf( fout, "%s (%d) -> Cluster %d\n", 
+                  feature_vectors[ max_feature_vectors ].name, 
+                  feature_vectors[ max_feature_vectors ].actual_class, cluster );
    }
 
    return;
